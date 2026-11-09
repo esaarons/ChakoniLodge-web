@@ -1,0 +1,644 @@
+@import "tailwindcss";
+
+/* Las capturas y perfiles de auditoría no son código fuente. */
+@source not "../../docs";
+@source not "../../.taste-skill";
+
+/* ── Tokens de marca (identidad del cliente) ─────────────────────────────── */
+@theme {
+  --color-forest: #203a2c;
+  --color-forest-deep: #182c21;
+  --color-olive: #78856b;
+  --color-olive-deep: #5e6a53; /* texto pequeño sobre marfil (AA) */
+  --color-ivory: #f5f1e8;
+  --color-paper: #fafaf7;
+  --color-shell: #faf9f5; /* tarjeta de consulta; color especificado por el cliente. taste-skill-ignore */
+  --color-sand: #e7e0d1;
+  --color-terracotta: #a5654d; /* acento: líneas, numerales, detalles grandes */
+  --color-terracotta-deep: #8e523c; /* acento en texto pequeño (AA) */
+  --color-charcoal: #242824;
+
+  --font-serif: var(--font-display), "Times New Roman", serif;
+  --font-sans: var(--font-body), system-ui, sans-serif;
+
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent; /* cada control tiene su propio estado :active */
+  }
+
+  a,
+  button {
+    touch-action: manipulation; /* sin la espera del doble toque */
+  }
+
+  button {
+    -webkit-user-select: none;
+    user-select: none; /* una pulsación larga no selecciona la etiqueta */
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-ivory text-charcoal font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-forest);
+    color: var(--color-ivory);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-terracotta);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ── Sistema de aparición al hacer scroll ─────────────────────────────────
+   Solo se oculta contenido cuando <html data-motion> existe: lo pone MotionGate al hidratar
+   y nunca con prefers-reduced-motion. Si el JavaScript falla, todo queda visible.
+   Disparador: un <Reveal> (data-visible). Efectos:
+     .reveal        el propio bloque sube y aparece (compatibilidad)
+     .rv-up         sube 24 px y aparece
+     .rv-image      máscara que se abre de arriba abajo + zoom leve del contenido (propiedad scale,
+                    para no chocar con el transform del parallax)
+     .rv-image-lg   lo mismo, solo desde 1024 px (en móvil, fundido sin desplazamiento: imagen estable)
+     .rv-clip-lg    solo la máscara, desde 1024 px (capa de color del titular que cruza una foto)
+     .rv-line       línea de titular: sube media línea y aparece
+     .rv-stagger    sus hijos directos entran en secuencia (--i lo asigna Reveal)
+   Retardos: (--d (ms, heredable) + --i × --stagger) × --rv-k. En móvil las secuencias se acortan:
+   los bloques van apilados y cada uno entra cuando llega a la pantalla. */
+:root {
+  --rv-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --rv-dur: 620ms;
+  --rv-k: 0.45;
+  --stagger: 110ms;
+}
+@media (min-width: 1024px) {
+  :root {
+    --rv-dur: 720ms;
+    --rv-k: 1;
+  }
+}
+
+html[data-motion] .reveal,
+html[data-motion] .rv-up,
+html[data-motion] .rv-line,
+html[data-motion] .rv-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--rv-dur) var(--rv-ease),
+    transform var(--rv-dur) var(--rv-ease);
+  transition-delay: calc((var(--d, 0ms) + var(--i, 0) * var(--stagger)) * var(--rv-k));
+}
+
+html[data-motion] .rv-line {
+  display: block;
+  transform: translateY(0.45em);
+  transition-duration: 800ms;
+}
+
+html[data-motion] .rv-image {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 800ms var(--rv-ease);
+  transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+}
+html[data-motion] .rv-image > * {
+  scale: 1.08;
+  transition: scale 1100ms var(--rv-ease);
+  transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+}
+
+/* .rv-image-lg: máscara solo en escritorio; en móvil, fundido con un zoom leve de la foto.
+   Solo opacidad y escala, que resuelve el compositor: no compite con el desplazamiento táctil. */
+html[data-motion] .rv-image-lg {
+  opacity: 0;
+  transition: opacity 700ms var(--rv-ease);
+  transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+}
+html[data-motion] .rv-image-lg > * {
+  scale: 1.05;
+  transition: scale 1000ms var(--rv-ease);
+  transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+}
+@media (min-width: 1024px) {
+  html[data-motion] .rv-image-lg {
+    opacity: 1;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 800ms var(--rv-ease);
+    transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+  }
+  html[data-motion] .rv-image-lg > * {
+    scale: 1.06;
+    transition: scale 1100ms var(--rv-ease);
+    transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-motion] .rv-clip-lg {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 800ms var(--rv-ease);
+    transition-delay: calc(var(--d, 0ms) * var(--rv-k));
+  }
+}
+[data-visible="true"] .rv-clip-lg {
+  clip-path: inset(0 0 0 0) !important;
+}
+
+/* Estado final: tras dispararse el bloque o cualquier ancestro */
+[data-visible="true"].reveal,
+[data-visible="true"].rv-up,
+[data-visible="true"] .rv-up,
+[data-visible="true"] .rv-line,
+[data-visible="true"] .rv-stagger > *,
+[data-visible="true"] .rv-image-lg,
+[data-visible="true"].rv-image-lg {
+  opacity: 1 !important;
+  transform: none !important;
+}
+[data-visible="true"] .rv-image,
+[data-visible="true"].rv-image,
+[data-visible="true"] .rv-image-lg,
+[data-visible="true"].rv-image-lg {
+  clip-path: inset(0 0 0 0) !important;
+}
+[data-visible="true"] .rv-image > *,
+[data-visible="true"].rv-image > *,
+[data-visible="true"] .rv-image-lg > *,
+[data-visible="true"].rv-image-lg > * {
+  scale: 1 !important;
+}
+
+/* Entrada del hero */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 800ms var(--ease-soft) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+  .hero-fade {
+    animation: fade-in 800ms var(--ease-soft) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+
+  .hero-zoom {
+    animation: hero-zoom 2.4s var(--ease-soft) both;
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.06);
+  }
+}
+
+/* Portada: oscurece solo donde hay texto (menú arriba, titular abajo) y deja limpio el centro.
+   Valores medidos sobre los fotogramas más claros del vídeo. taste-skill-ignore */
+.hero-scrim {
+  background: linear-gradient( /* taste-skill-ignore: velo neutro sobre vídeo */
+    to bottom,
+    rgb(20 24 21 / 0.62) 0,
+    rgb(20 24 21 / 0.58) 4rem,
+    rgb(20 24 21 / 0.3) 6.5rem,
+    rgb(20 24 21 / 0.42) 34%,
+    rgb(20 24 21 / 0.5) 48%,
+    rgb(20 24 21 / 0.62) 60%,
+    rgb(20 24 21 / 0.62) 72%,
+    rgb(20 24 21 / 0.3) 90%,
+    rgb(20 24 21 / 0.3) 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  .hero-scrim {
+    background: linear-gradient( /* taste-skill-ignore: velo neutro sobre vídeo */
+      to bottom,
+      rgb(20 24 21 / 0.68) 0%,
+      rgb(20 24 21 / 0.62) 12%,
+      rgb(20 24 21 / 0.06) 27%,
+      rgb(20 24 21 / 0.06) 50%,
+      rgb(20 24 21 / 0.38) 64%,
+      rgb(20 24 21 / 0.6) 84%,
+      rgb(20 24 21 / 0.66) 100%
+    );
+  }
+}
+
+/* Foto con texto encima: oscurece solo la base. taste-skill-ignore */
+.photo-scrim {
+  background: linear-gradient( /* taste-skill-ignore: velo neutro sobre foto */
+    to top,
+    rgb(20 24 21 / 0.8) 0%,
+    rgb(20 24 21 / 0.62) 34%,
+    rgb(20 24 21 / 0.28) 56%,
+    rgb(20 24 21 / 0) 74%
+  );
+}
+
+/* Ubicación: arranca en el fondo de la galería y baja hacia el oliva, sin llegar al verde del footer. */
+.location-bg {
+  background: linear-gradient( /* taste-skill-ignore: degradado de sección dentro de la paleta */
+    to bottom,
+    var(--color-paper) 0%,
+    var(--color-sand) 58%,
+    color-mix(in srgb, var(--color-sand) 60%, var(--color-olive)) 100%
+  );
+}
+
+/* Logotipo de la portada (por debajo de 1024 px). Ancho fluido, con tope por altura para pantallas
+   bajas; el alto sale de la proporción de la imagen. */
+.hero-logo {
+  position: relative;
+  flex: none;
+  width: min(clamp(150px, 46vw, 190px), 44svh);
+}
+@media (min-width: 768px) {
+  .hero-logo {
+    width: min(clamp(200px, 28vw, 240px), 44svh);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-logo > img {
+    animation: hero-logo 850ms var(--ease-soft) 120ms both;
+  }
+}
+
+@keyframes hero-logo {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Panel inferior (calendario en móvil). Entra y sale con transición; donde no hay @starting-style,
+   simplemente aparece. */
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: 30rem;
+  max-height: calc(100dvh - 0.75rem);
+  margin: 0 auto;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 28px 28px 0 0;
+  transform: translateY(100%);
+}
+.sheet[open] {
+  transform: none;
+}
+.sheet::backdrop {
+  background: rgb(20 24 21 / 0);
+}
+.sheet[open]::backdrop {
+  background: rgb(20 24 21 / 0.5);
+}
+
+/* Caja de consulta: panel inferior en móvil y tablet; desde 1024 px, bajo el botón del navbar.
+   Con el Container: 88rem de ancho y 3rem de margen, alineada a su borde derecho. */
+@media (max-width: 1023.98px) {
+  html:has(.booking-panel[open]) {
+    overflow: hidden;
+  }
+}
+@media (min-width: 1024px) {
+  .booking-panel {
+    inset: 6.25rem max(3rem, calc((100vw - 88rem) / 2 + 3rem)) auto auto;
+    width: 24rem;
+    max-height: calc(100dvh - 7rem);
+    margin: 0;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -30px rgb(18 30 22 / 0.55); /* taste-skill-ignore: panel flotante */
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+    transform-origin: top right;
+  }
+  .booking-panel[open] {
+    opacity: 1;
+    transform: none;
+  }
+  .booking-panel[open]::backdrop {
+    background: rgb(20 24 21 / 0.3);
+  }
+}
+
+.menu-panel {
+  opacity: 0;
+}
+.menu-panel[open] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet {
+    transition:
+      transform 340ms cubic-bezier(0.32, 0.72, 0, 1),
+      overlay 340ms allow-discrete,
+      display 340ms allow-discrete;
+  }
+  .booking-panel {
+    transition:
+      transform 340ms cubic-bezier(0.32, 0.72, 0, 1),
+      opacity 240ms ease,
+      overlay 340ms allow-discrete,
+      display 340ms allow-discrete;
+  }
+  .sheet::backdrop {
+    transition:
+      background-color 340ms ease,
+      overlay 340ms allow-discrete,
+      display 340ms allow-discrete;
+  }
+  .menu-panel {
+    transition:
+      opacity 260ms var(--ease-soft),
+      overlay 260ms allow-discrete,
+      display 260ms allow-discrete;
+  }
+  @starting-style {
+    .sheet[open] {
+      transform: translateY(100%);
+    }
+    .sheet[open]::backdrop {
+      background: rgb(20 24 21 / 0);
+    }
+    .menu-panel[open] {
+      opacity: 0;
+    }
+  }
+  @media (min-width: 1024px) {
+    @starting-style {
+      .booking-panel[open] {
+        opacity: 0;
+        transform: translateY(-14px) scale(0.97);
+      }
+    }
+  }
+}
+
+/* Experiencias: tarjetas que se reparten el ancho. Al activarse una, se expande, su foto se asienta y
+   su texto entra palabra a palabra. El reparto usa flex-grow: tres tarjetas, sin coste apreciable. */
+.exp-card {
+  transition: flex-grow 900ms var(--ease-soft);
+}
+/* La entrada (.rv-gallery) también usa `transition`: aquí se suman las dos. */
+html[data-motion] .exp-card.rv-gallery {
+  transition:
+    clip-path var(--gallery-reveal) var(--gallery-ease),
+    flex-grow 900ms var(--ease-soft);
+  transition-delay: calc(var(--i, 0) * var(--gallery-stagger)), 0ms;
+}
+.exp-card .photo-scrim {
+  opacity: 0;
+}
+.exp-card[data-active="true"] .photo-scrim {
+  opacity: 1;
+}
+.story-mask {
+  display: inline-block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  vertical-align: top;
+}
+.story-word {
+  display: inline-block;
+}
+.exp-card[data-active="false"] .story-word {
+  transform: translateY(115%);
+}
+.exp-card[data-active="false"] .story-body {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .exp-card .photo-scrim {
+    transition: opacity 600ms var(--ease-soft);
+  }
+  .exp-card img {
+    scale: 1.08;
+    transition: scale 1400ms var(--ease-soft);
+  }
+  .exp-card[data-active="true"] img {
+    scale: 1;
+  }
+  .story-word {
+    transition: transform 300ms var(--ease-soft);
+  }
+  .exp-card[data-active="true"] .story-word {
+    transition: transform 700ms var(--ease-soft);
+    transition-delay: calc(320ms + var(--i) * 60ms);
+  }
+  .story-body {
+    transition: opacity 250ms var(--ease-soft);
+  }
+  .exp-card[data-active="true"] .story-body {
+    transition: opacity 600ms var(--ease-soft) 560ms;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .exp-card {
+    transition: none;
+  }
+}
+/* Sin ancho para el reparto: carrusel nativo. Cada tarjeta se ve abierta y la siguiente asoma. */
+@media (max-width: 1023.98px) {
+  .exp-row {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .exp-row::-webkit-scrollbar {
+    display: none;
+  }
+  .exp-card {
+    flex: 0 0 min(84vw, 26rem);
+    scroll-snap-align: start;
+  }
+  .exp-card .photo-scrim,
+  .exp-card[data-active="false"] .story-body {
+    opacity: 1;
+  }
+  .exp-card[data-active="false"] .story-word {
+    transform: none;
+  }
+  .exp-card img {
+    scale: 1;
+  }
+}
+
+/* Habitaciones: la foto nueva entra encima y la anterior sigue opaca debajo hasta quedar cubierta, así
+   el fundido nunca deja ver el fondo. Al activarse, la foto se asienta despacio; al salir conserva su
+   encuadre y se reinicia ya oculta. */
+:root {
+  --slide-fade: 1000ms;
+}
+.rooms-slide {
+  opacity: 0;
+  transition: opacity 0s linear var(--slide-fade);
+}
+.rooms-slide[data-active="true"] {
+  z-index: 1;
+  opacity: 1;
+  transition: opacity var(--slide-fade) var(--ease-soft);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rooms-slide img {
+    scale: 1.06;
+    transition: scale 0s linear var(--slide-fade);
+  }
+  .rooms-slide[data-active="true"] img {
+    scale: 1;
+    transition: scale 7s var(--ease-soft);
+  }
+}
+
+/* Galería. Ritmo de la entrada y del hover; el del visor y los filtros está en gallery/motion.ts. */
+:root {
+  --gallery-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gallery-reveal: 900ms;
+  --gallery-stagger: 100ms;
+  --gallery-hover: 450ms;
+}
+
+html:has(dialog[data-gallery][open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+dialog[data-gallery]::backdrop {
+  background: transparent;
+}
+
+/* Entrada: cada foto se abre de abajo arriba mientras la imagen vuelve a su tamaño. */
+html[data-motion] .rv-gallery {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path var(--gallery-reveal) var(--gallery-ease);
+  transition-delay: calc(var(--i, 0) * var(--gallery-stagger));
+}
+html[data-motion] .rv-gallery .gallery-zoom {
+  scale: 1.15;
+  transition: scale calc(var(--gallery-reveal) + 200ms) var(--gallery-ease);
+  transition-delay: calc(var(--i, 0) * var(--gallery-stagger));
+}
+[data-visible="true"] .rv-gallery {
+  clip-path: inset(0) !important;
+}
+[data-visible="true"] .rv-gallery .gallery-zoom {
+  scale: 1 !important;
+}
+
+.gallery-more {
+  background: rgb(32 58 44 / 0.7);
+  transition: background-color var(--gallery-hover) var(--gallery-ease);
+}
+.gallery-more-count {
+  transition: transform var(--gallery-hover) var(--gallery-ease);
+}
+
+/* Hover solo con puntero: la foto señalada se acerca y las demás ceden protagonismo. */
+.gallery-label {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .gallery-tile {
+    transition: opacity var(--gallery-hover) var(--gallery-ease);
+  }
+  .gallery-grid:has(.gallery-tile:hover) .gallery-tile:not(:hover) {
+    opacity: 0.6;
+  }
+  .gallery-tile img {
+    transition: transform calc(var(--gallery-hover) * 2) var(--gallery-ease);
+  }
+  .gallery-label {
+    display: block;
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity var(--gallery-hover) var(--gallery-ease),
+      transform var(--gallery-hover) var(--gallery-ease);
+  }
+  .gallery-tile:hover .gallery-label,
+  .gallery-tile:has(:focus-visible) .gallery-label {
+    opacity: 1;
+    transform: none;
+  }
+  .gallery-tile:hover .gallery-more {
+    background: rgb(32 58 44 / 0.55);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .gallery-tile:hover img {
+      transform: scale(1.05);
+    }
+    .gallery-tile:hover .gallery-more-count {
+      transform: scale(1.08);
+    }
+  }
+}
+
+/* Tarjeta de consulta: transición entre pasos (dirección en --dir: 1 avanza, -1 retrocede) */
+@media (prefers-reduced-motion: no-preference) {
+  .step-height {
+    transition: height 320ms var(--ease-soft);
+  }
+  .step-enter {
+    animation: step-in 320ms var(--ease-soft) both;
+  }
+  .step-exit {
+    animation: step-out 240ms var(--ease-soft) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-exit {
+    display: none;
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 1) * 12px));
+  }
+}
+
+@keyframes step-out {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 1) * -12px));
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+

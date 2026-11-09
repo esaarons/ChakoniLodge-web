@@ -1,0 +1,18 @@
+node_modules
+.next
+out
+.env*.local
+next-env.d.ts
+*.tsbuildinfo
+
+# Perfiles temporales de Chrome usados en capturas de auditoría
+docs/**/profile/
+docs/**/sheetprof/
+.taste-skill/
+
+# Capturas de auditoría y de pruebas con Playwright (se quedan en local)
+docs/auditoria-movil/
+.playwright-mcp/
+
+# Configuración personal de Claude Code
+.claude/settings.local.json
